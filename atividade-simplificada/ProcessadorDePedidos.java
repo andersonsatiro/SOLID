@@ -1,21 +1,24 @@
-/**
- * ESTA É A CLASSE QUE VIOLA TODOS OS PRINCÍPIOS SOLID
- */
 class ProcessadorDePedidos {
-    // Violação do DIP: Depende diretamente da implementação concreta
-    private MySQLRepositorio repositorio = new MySQLRepositorio();
+    
+    private final CalcularTotalPedido calcularTotalPedido;
+    private final ProcessarTipoPagamento processarTipoPagamento;
+    private final SalvarBanco salvarBanco;
+    private final EnviarEmail enviarEmail;
 
-    // Violação do SRP: Esta classe faz tudo
+    public ProcessadorDePedidos(CalcularTotalPedido calcularTotalPedido, ProcessarTipoPagamento processarTipoPagamento, SalvarBanco salvarBanco, EnviarEmail enviarEmail) {
+        this.calcularTotalPedido = calcularTotalPedido;
+        this.processarTipoPagamento = processarTipoPagamento;
+        this.salvarBanco = salvarBanco;
+        this.enviarEmail = enviarEmail;
+    }
+    
     public void processar(Pedido pedido) {
-        // 1. Responsabilidade: Calcular o total
-        double total = 0;
-        for (Item item : pedido.getItens()) {
-            total += item.getPreco();
-        }
-        System.out.println("Total do pedido: " + total);
 
-        // 2. Responsabilidade: Processar o pagamento
-        // Violação do OCP: Aberto para modificação quando um novo pagamento surgir
+        calcularTotalPedido.calcular(pedido);
+
+        processarTipoPagamento.processar(pedido.getTipoPagamento());
+
+                // Violação do OCP: Aberto para modificação quando um novo pagamento surgir
         if (pedido.getTipoPagamento().equals("cartao")) {
             System.out.println("Processando pagamento via Cartão de Crédito...");
             // Lógica específica para cartão
@@ -24,11 +27,9 @@ class ProcessadorDePedidos {
             // Lógica específica para boleto
         }
 
-        // 3. Responsabilidade: Salvar no banco
-        repositorio.salvar(pedido);
+        salvarBanco.salvar(pedido);
 
-        // 4. Responsabilidade: Enviar e-mail
-        System.out.println("Enviando e-mail de confirmação...");
-        // Lógica de envio de e-mail
+        enviarEmail.enviar(pedido);
+
     }
 }
